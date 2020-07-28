@@ -1,58 +1,20 @@
 import requests
-from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
-
 import json
 import datetime
 import random
 from JetOut.settings import sabre_client_credentials, unsplash_client_credentials
 from .models import Keyword, Image
-
 import time
 
-DEFAULT_TIMEOUT = 5
 baseSabreUrl = 'https://api-crt.cert.havail.sabre.com'
 baseUnsplashUrl = 'https://api.unsplash.com'
 
-
-class TimeoutHTTPAdapter(HTTPAdapter):
-    def __init__(self, *args, **kwargs):
-        self.timeout = DEFAULT_TIMEOUT
-        if "timeout" in kwargs:
-            self.timeout = kwargs["timeout"]
-            del kwargs["timeout"]
-        super().__init__(*args, **kwargs)
-
-    def send(self, request, **kwargs):
-        timeout = kwargs.get("timeout")
-        if timeout is None:
-            kwargs["timeout"] = self.timeout
-        return super().send(request, **kwargs)
-
-
-http = requests.Session()
-retries = Retry(total=3, backoff_factor=1,
-                status_forcelist=[429, 500, 502, 503, 504])
-http.mount("https://", TimeoutHTTPAdapter(max_retries=retries))
-
-
-with open('backend/ISO-3166.json') as f:
-    data = json.load(f)
-    internationalList = ','.join([i['alpha-2']
-                                  for i in data if i['alpha-2'] != 'US'])
-
-with open('backend/airlines.json') as f:
-    data = json.load(f)
-    airlineDict = dict(zip([i['iata'] for i in data], data))
-
-
-with open('backend/airports.json') as f:
-    data = json.load(f)
-    airportDict = dict(zip([i['code'] for i in data], data))
-
-
-def printErrors(name, headers, response, params={}, data={}):    
-    with open('%s.txt' % name, 'w') as f:
+def printErrors(headers, response, params={}, data={}):
+    
+    print('$'*25)
+    print('caught error, writing out...')
+    
+    with open('error_%u' % int(time.time()), 'w') as f:
         f.write('$'*25 + '\n')
         f.write('headers\n')
         json.dump(headers, f)
@@ -76,6 +38,21 @@ def printErrors(name, headers, response, params={}, data={}):
         f.write('$'*25 + '\n')
         f.write('status code\n')
         f.write('%u' % response.status_code)
+        
+
+with open('backend/ISO-3166.json') as f:
+    data = json.load(f)
+    internationalList = ','.join([i['alpha-2']
+                                  for i in data if i['alpha-2'] != 'US'])
+
+with open('backend/airlines.json') as f:
+    data = json.load(f)
+    airlineDict = dict(zip([i['iata'] for i in data], data))
+
+
+with open('backend/airports.json') as f:
+    data = json.load(f)
+    airportDict = dict(zip([i['code'] for i in data], data))
 
 
 def getImage(query):
@@ -89,8 +66,8 @@ def getImage(query):
             'query': query,
             'page': 1,
         }
-        request = http.get('%s/search/photos' %
-                           baseUnsplashUrl, headers={}, params=params)
+        request = requests.get('%s/search/photos' %
+                               baseUnsplashUrl, headers={}, params=params)
         images = [keyword.images.create(url=i['urls']['regular'])
                   for i in request.json()['results'][:5]]
     images = list(images)
@@ -104,10 +81,15 @@ def getToken():
         'Content-Type': 'application/x-www-form-urlencoded',
     }
     body = {'grant_type': 'client_credentials'}
-    response = http.post('%s/v2/auth/token' %
-                         baseSabreUrl, headers=headers, data=body)
+    request = requests.post('%s/v2/auth/token' %
+                            baseSabreUrl, headers=headers, data=body)
 
-    return response.json()['access_token']
+    # if request.status_code == 200:
+    #     return request.json()['access_token']
+    # else:
+    #     raise Exception(request.text)
+
+    return request.json()['access_token']
 
 
 def getFares(token, origin, departureDate, returnDate, destinationFilter=None, minFare=0):
@@ -126,52 +108,23 @@ def getFares(token, origin, departureDate, returnDate, destinationFilter=None, m
     if destinationFilter == 'international':
         params['location'] = internationalList
 
-    response = http.get('%s/v2/shop/flights/fares' %
-                        baseSabreUrl, headers=headers, params=params)
+    response = requests.get('%s/v2/shop/flights/fares' %
+                            baseSabreUrl, headers=headers, params=params)
+    
+    #-----------------------------------
+    if response.status_code != 200:
+        printErrors(headers, response, params=params)
 
-    # printErrors('getFares', headers, response, params=params)
-
-    # with open('backend/travel_data.json', 'w') as f:
-    #     json.dump(response.json(), f)
-
+    with open('backend/travel_data.json', 'w') as f:
+        json.dump(response.json(), f)
+    
     with open('backend/travel_data.json') as f:
         data = json.load(f)
 
     return data
 
 
-def getFareDetails(token, origin, destination, departureDate, returnDate, price):
-    headers = {
-        'Authorization': 'Bearer %s' % token,
-        'accept': 'application/json',
-    }
-
-    params = {
-        'origin': origin,
-        'destination': destination,
-        'departuredate': departureDate,
-        'returndate': returnDate,
-        'pointofsalecountry': 'US',
-
-    }
-    # response = http.get('%s/v1/shop/flights' %
-    #                     baseSabreUrl, headers=headers, params=params)
-
-    # printErrors('getFareDetails', headers, response, params=params)
-    # with open('backend/fare_data.json', 'w') as f:
-    #     json.dump(response.json(), f)
-
-    with open('backend/fare_data.json') as f:
-        data = json.load(f)
-
-    fares = [i for i in data['PricedItineraries'] if float(
-        i['AirItineraryPricingInfo']['ItinTotalFare']['TotalFare']['Amount']) == price]
-    return fares
-
-
 def filterFares(faresJson):
-    if faresJson.get('message') == 'No results were found':
-        return []
     priceDict = {}
     for fare in faresJson['FareInfo']:
         priceDict.setdefault(int(fare['LowestFare']['Fare']), []).append(fare)
@@ -207,4 +160,37 @@ def filterFares(faresJson):
             )
 
     fares = [(key, fares[key]) for key in fares.keys()]
+    return fares
+
+
+def getFareDetails(token, origin, destination, departureDate, returnDate, price):
+
+    headers = {
+        'Authorization': 'Bearer %s' % token,
+        'accept': 'application/json',
+    }
+
+    params = {
+        'origin': origin,
+        'destination': destination,
+        'departuredate': departureDate,
+        'returndate': returnDate,
+        'pointofsalecountry': 'US',
+
+    }
+    response = requests.get('%s/v1/shop/flights' %
+                            baseSabreUrl, headers=headers, params=params)
+    
+    #-----------------------------------
+    if response.status_code != 200:
+        printErrors(headers, response, params=params)
+            
+
+    with open('backend/fare_data.json', 'w') as f:
+        json.dump(response.json(), f)
+
+    with open('backend/fare_data.json') as f:
+        data = json.load(f)
+    
+    fares = [i for i in data['PricedItineraries'] if float(i['AirItineraryPricingInfo']['ItinTotalFare']['TotalFare']['Amount'])==price]
     return fares

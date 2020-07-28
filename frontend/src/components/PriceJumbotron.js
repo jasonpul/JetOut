@@ -17,8 +17,8 @@ const PriceJumbotron = (props) => {
   
 
   return (
-    <div className="relative" style={{cursor: 'pointer'}} onClick={() => {props.onClick(props.fareObj[1][0].id)}}>
-      <div className="relative max-w-sm w-full lg:max-w-full lg:max-h-48 lg:flex mx-auto">
+    <div className="relative" style={{cursor: 'pointer'}} onClick={() => {props.onClick(props.fareObj[1])}}>
+      <div className="relative max-w-sm w-full mx-auto ml-10 mr-10 lg:max-w-full lg:max-h-48 lg:flex">
         <div className="relative flex-none h-48 rounded-t bg-cover text-center overflow-hidden lg:h-auto lg:w-1/3 lg:rounded-t-none lg:rounded-l" style={{backgroundImage: `url(${imageUrl})`}}>
           <div className="absolute bg-gray-300 opacity-75 h-full w-full rounded-t lg:rounded-t-none lg:rounded-l" />
           <span className="relative w-full h-full flex flex-col justify-center text-5xl italic" >${farePrice} Fares</span>

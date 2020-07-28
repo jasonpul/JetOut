@@ -43,6 +43,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -122,6 +123,12 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-with open('../keys.txt') as f:
+with open('keys.txt') as f:
     data = f.readlines()
-client_credentials = data[2].split('=')[1].strip()
+sabre_client_credentials = data[2].split('=')[1].strip()
+unsplash_client_credentials = data[3].split('=')[1].strip()
+
+CORS_ORIGIN_WHITELIST = (
+    'http://localhost:3000',
+    'https://localhost:3000',
+)
