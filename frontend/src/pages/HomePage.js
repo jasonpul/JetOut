@@ -14,14 +14,15 @@ const HomePage = (props) => {
   const [isLoading, setIsLoading] = React.useState(true)
   const [fares, setFares] = React.useState([])
   const [noResults, setNoResults] = React.useState(false)
+  props.setNavTitle('Search Flights')
 
 
-  const getFares = async (airportCode, dateRange) => {
+  const getFares = async (airportCode, dateRange, travelFilter) => {
     let searchObj = {
       origin: airportCode,
       departureDate: DateToString(dateRange.from),
       returnDate: DateToString(dateRange.to),
-      destinationFilter: 'domestic',
+      destinationFilter: travelFilter,
       minFare: 0,
     }
     setIsLoading(true)
@@ -55,7 +56,7 @@ const HomePage = (props) => {
       // console.log(responseJson.details)
     }
     // console.log(responseJsons)
-    props.history.push('/details', responseJsons)
+    props.history.push('/details', {response: responseJsons, price: faresObj[0].fullPrice})
   }
 
   React.useEffect(() => {
@@ -70,6 +71,7 @@ const HomePage = (props) => {
           ? <PageLoader />
           : (
               <div>
+                <div className='w-full mx-auto italic text-right text-gray-300 text-sm lg:w-10/12'>16 day max allowable trip length</div>
                 <DestinationSearch onSubmit={getFares} />
                 {noResults ? <div className='text-center text-6xl'>sorry, no flights found</div> : null}
                 <div className="grid grid-cols-1 gap-4 mb-4 lg:gap-12 lg:mb-12">

@@ -15,15 +15,18 @@
     "react-router": "^5.2.0",
     "react-router-dom": "^5.2.0",
     "react-scripts": "3.4.1",
-    "react-wordcloud": "^1.2.5"
+    "react-wordcloud": "^1.2.5",
+    "serve": "^11.3.2"
   },
   "scripts": {
-    "start": "npm run watch:css && react-scripts start",
+    "dev": "npm run watch:css && react-scripts start",
+    "start": "serve -s build",
     "build": "npm run watch:css && react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "build:css": "postcss src/assets/tailwind.css -o src/assets/main.css",
-    "watch:css": "postcss src/assets/tailwind.css -o src/assets/main.css"
+    "watch:css": "postcss src/assets/tailwind.css -o src/assets/main.css",
+    "heroku-postbuild": "npm run build"
   },
   "eslintConfig": {
     "extends": "react-app"

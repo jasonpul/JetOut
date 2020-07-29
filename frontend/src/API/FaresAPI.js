@@ -1,4 +1,5 @@
 const baseUrl = 'http://localhost:8000'
+// const baseUrl = 'https://jet-out-backend.herokuapp.com'
 
 const getFares = async (searchObj) => {
   let response = await fetch(`${baseUrl}/get-fares`, {

@@ -1,7 +1,6 @@
 import React from 'react'
 
 
-
 const PriceJumbotron = (props) => {
   let farePrice = props.fareObj[0]
   let cityNames = props.fareObj[1].map((fare) => {
@@ -15,21 +14,17 @@ const PriceJumbotron = (props) => {
   let imageUrl
   imageUrl = imageUrls[Math.floor(Math.random() * imageUrls.length)]
   
-
   return (
     <div className="relative" style={{cursor: 'pointer'}} onClick={() => {props.onClick(props.fareObj[1])}}>
-      <div className="relative max-w-sm w-full mx-auto ml-10 mr-10 lg:max-w-full lg:max-h-48 lg:flex">
-        <div className="relative flex-none h-48 rounded-t bg-cover text-center overflow-hidden lg:h-auto lg:w-1/3 lg:rounded-t-none lg:rounded-l" style={{backgroundImage: `url(${imageUrl})`}}>
-          <div className="absolute bg-gray-300 opacity-75 h-full w-full rounded-t lg:rounded-t-none lg:rounded-l" />
-          <span className="relative w-full h-full flex flex-col justify-center text-5xl italic" >${farePrice} Fares</span>
+      <div className="relative flex h-48 w-full mx-auto rounded-lg bg-gray-800 shadow-xl border-2 border-gray-700">
+        <div className="relative flex flex-col justify-center text-center text-gray-300 italic font-bold outlineText w-1/3 h-full bg-gray-800 rounded-l-lg text-5xl lg:w-1/4 ">
+          ${farePrice}
         </div>
-        <div className="relative w-full h-48 border-l border-r border-b border-gray-400 bg-white rounded-b p-4 flex flex-col justify-between leading-normal lg:border-l-0 lg:border-t lg:border-gray-400 lg:rounded-b-none lg:rounded-r" >
-          {/* <Resizable defaultSize={{width:'100%',height: '100%'}} style={resizeStyle} className='relative'>
-            <div style={{padding: 0, width: '100%', height: '100%', userSelect: 'none'}} className=' opacity-50'>
-              <ReactWordcloud options={wordCloudOptions} words={words} />
-            </div>
-          </Resizable> */}
-            <div className="w-full h-full text-gray-900 font-bold text-8xl text-center italic flex flex-col justify-center" >{destinations}</div>
+        <div 
+          className="relative flex flex-col justify-center text-center text-gray-300 italic font-bold outlineText w-2/3 h-full bg-gray-300 rounded-r-lg overflow-hidden  bg-cover text-3xl lg:text-5xl lg:w-3/4"
+          style={{backgroundImage: `url(${imageUrl})`, backgroundPosition: 'center'}}
+        >
+          {destinations}
         </div>
       </div>
     </div>

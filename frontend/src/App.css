@@ -1,0 +1,12 @@
+html {
+  background-color: #1a202c;
+}
+
+.outlineText {
+  -webkit-text-stroke-width: 0.05rem;
+  -webkit-text-stroke-color: black;
+}
+
+.profileImage {
+  border-radius: 50%;
+}

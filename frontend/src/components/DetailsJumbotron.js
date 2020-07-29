@@ -15,7 +15,7 @@ const DetailsJumbotron = (props) => {
   const legCount = segments.length
 
   return (
-    <div className={`grid grid-rows-${legCount * 2} grid-cols-12 gap-0 mb-4 h-48 w-full mx-auto border-2 rounded-lg p-3`}>
+    <div className={`grid grid-rows-${legCount * 2} grid-cols-12 gap-0 mb-4 h-48 w-full mx-auto rounded-lg p-3 bg-gray-800 shadow-lg border-2 border-gray-700 text-gray-300`}>
 
       <div className={`row-span-${legCount * 2} col-span-3 grid grid-rows-${legCount} grid-cols-1 gap-0 h-full w-full mx-auto`}>
         {segments.map((segment, i) => {
@@ -30,7 +30,7 @@ const DetailsJumbotron = (props) => {
         })}
       </div>
       <div className={`row-span-${legCount * 2} col-span-3 grid grid-rows-${legCount} grid-cols-1 gap-0 h-full w-full mx-auto`}>
-        <div className="row-span-2 text-center flex flex-col justify-center text-5xl italic ">
+        <div className="row-span-2 text-center flex flex-col justify-center text-gray-300 italic font-bold outlineText text-2xl lg:text-5xl">
           {`$${price}`}
         </div>
       </div>
