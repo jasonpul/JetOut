@@ -4,7 +4,7 @@ import DetailsJumbotron from '../components/DetailsJumbotron'
 
 const FareDetailsPage = (props) => {
   const [noResults, setNoResults] = React.useState(false)
-  props.setNavTitle('Flight Details')
+  props.handleUpdateNavTitle('Flight Details')
 
   let fares = []
   let price

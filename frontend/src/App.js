@@ -14,13 +14,13 @@ const App = () => {
   }
 
   const HomePageRenderer = (props) => {
-    return <HomePage {...props} setNavTitle={handleUpdateNavTitle} />
+    return <HomePage {...props} handleUpdateNavTitle={handleUpdateNavTitle} />
   }
   const FareDetailsPageRenderer = (props) => {
-    return <FareDetailsPage {...props} setNavTitle={handleUpdateNavTitle} />
+    return <FareDetailsPage {...props} handleUpdateNavTitle={handleUpdateNavTitle} />
   }
   const AboutPageRenderer = (props) => {
-    return <AboutPage {...props} setNavTitle={handleUpdateNavTitle} />
+    return <AboutPage {...props} handleUpdateNavTitle={handleUpdateNavTitle} />
   }
 
   return (

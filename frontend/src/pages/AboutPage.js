@@ -2,7 +2,7 @@ import React from 'react'
 import profileImage from '../assets/profile_small.png'
 
 const AboutPage = (props) => {
-  props.setNavTitle('About')
+  props.handleUpdateNavTitle('About')
   return (
     <div className='text-gray-300'>
       <div className='flex justify-center'>

@@ -14,7 +14,7 @@ const HomePage = (props) => {
   const [isLoading, setIsLoading] = React.useState(true)
   const [fares, setFares] = React.useState([])
   const [noResults, setNoResults] = React.useState(false)
-  props.setNavTitle('Search Flights')
+  props.handleUpdateNavTitle('Search Flights')
 
 
   const getFares = async (airportCode, dateRange, travelFilter) => {

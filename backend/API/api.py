@@ -31,15 +31,10 @@ class TimeoutHTTPAdapter(HTTPAdapter):
 
 
 http = requests.Session()
-retries = Retry(total=3, backoff_factor=1,
+retries = Retry(total=10, backoff_factor=1,
                 status_forcelist=[429, 500, 502, 503, 504])
 http.mount("https://", TimeoutHTTPAdapter(max_retries=retries))
 
-
-with open('backend/ISO-3166.json') as f:
-    data = json.load(f)
-    internationalList = ','.join([i['alpha-2']
-                                  for i in data if i['alpha-2'] != 'US'])
 
 with open('backend/airlines.json') as f:
     data = json.load(f)
@@ -49,25 +44,28 @@ with open('backend/airlines.json') as f:
 with open('backend/airports.json') as f:
     data = json.load(f)
     airportDict = dict(zip([i['code'] for i in data], data))
+    domesticList = [i['code'] for i in data if i['country']=='United States']
 
 
-def printErrors(name, headers, response, params={}, data={}):    
+def printErrors(name, headers, response, params={}, data={}):
+    print('$'*25)
+    print('writing out response')
     with open('%s.txt' % name, 'w') as f:
         f.write('$'*25 + '\n')
         f.write('headers\n')
         json.dump(headers, f)
         f.write('\n\n')
-        
+
         f.write('$'*25 + '\n')
         f.write('params\n')
         json.dump(params, f)
         f.write('\n\n')
-        
+
         f.write('$'*25 + '\n')
         f.write('data\n')
         json.dump(data, f)
         f.write('\n\n')
-        
+
         f.write('$'*25 + '\n')
         f.write('response\n')
         json.dump(response.json(), f)
@@ -95,6 +93,7 @@ def getImage(query):
                   for i in request.json()['results'][:5]]
     images = list(images)
     random.shuffle(images)
+
     return [i.url for i in images][:2]
 
 
@@ -121,21 +120,19 @@ def getFares(token, origin, departureDate, returnDate, destinationFilter=None, m
         'returndate': returnDate,
         'minfare': minFare,
     }
-    if destinationFilter == 'domestic':
-        params['location'] = 'US'
-    if destinationFilter == 'international':
-        params['location'] = internationalList
 
     response = http.get('%s/v2/shop/flights/fares' %
                         baseSabreUrl, headers=headers, params=params)
 
-    # printErrors('getFares', headers, response, params=params)
+    printErrors('getFares', headers, response, params=params)
 
-    # with open('backend/travel_data.json', 'w') as f:
-    #     json.dump(response.json(), f)
+    with open('backend/travel_data.json', 'w') as f:
+        json.dump(response.json(), f)
 
-    with open('backend/travel_data.json') as f:
-        data = json.load(f)
+    data = response.json()
+
+    # with open('backend/travel_data.json') as f:
+    #     data = json.load(f)
 
     return data
 
@@ -154,24 +151,32 @@ def getFareDetails(token, origin, destination, departureDate, returnDate, price)
         'pointofsalecountry': 'US',
 
     }
-    # response = http.get('%s/v1/shop/flights' %
-    #                     baseSabreUrl, headers=headers, params=params)
+    response = http.get('%s/v1/shop/flights' %
+                        baseSabreUrl, headers=headers, params=params)
 
-    # printErrors('getFareDetails', headers, response, params=params)
-    # with open('backend/fare_data.json', 'w') as f:
-    #     json.dump(response.json(), f)
+    printErrors('getFareDetails', headers, response, params=params)
+    with open('backend/fare_data.json', 'w') as f:
+        json.dump(response.json(), f)
 
-    with open('backend/fare_data.json') as f:
-        data = json.load(f)
+    data = response.json()
 
-    fares = [i for i in data['PricedItineraries'] if float(
-        i['AirItineraryPricingInfo']['ItinTotalFare']['TotalFare']['Amount']) == price]
-    return fares
+    # with open('backend/fare_data.json') as f:
+    #     data = json.load(f)
+
+    return data
 
 
-def filterFares(faresJson):
+def filterFares(faresJson, destinationFilter):
     if faresJson.get('message') == 'No results were found':
         return []
+
+    if destinationFilter == 'domestic':
+        faresJson['FareInfo'] = [i for i in faresJson['FareInfo'] if i['DestinationLocation'] in domesticList]
+    elif destinationFilter == 'international':
+        faresJson['FareInfo'] = [i for i in faresJson['FareInfo'] if i['DestinationLocation'] not in domesticList]
+    print('^'*25)
+    print(len(faresJson['FareInfo']))
+
     priceDict = {}
     for fare in faresJson['FareInfo']:
         priceDict.setdefault(int(fare['LowestFare']['Fare']), []).append(fare)
@@ -182,7 +187,7 @@ def filterFares(faresJson):
             fullPrice = fare['LowestFare']['Fare']
             city = airportDict[fare['DestinationLocation']]['city']
             origin = faresJson['OriginLocation']
-            imageUrls = getImage(city)
+            imageUrls = getImage(city) + getImage('travel')
             imageUrl1 = imageUrls[0]
             imageUrl2 = imageUrls[1]
             destinationAirportName = airportDict[fare['DestinationLocation']]['name']
@@ -207,4 +212,13 @@ def filterFares(faresJson):
             )
 
     fares = [(key, fares[key]) for key in fares.keys()]
+    return fares
+
+
+def filterDetails(faresJson, price):
+    fares = [i for i in faresJson['PricedItineraries'] if float(
+        i['AirItineraryPricingInfo']['ItinTotalFare']['TotalFare']['Amount']) == price]
+    if len(fares) == 0:
+        return fares
+
     return fares
